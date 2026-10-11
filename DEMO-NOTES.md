@@ -2,7 +2,7 @@
 
 11 October 2026, 4:38 PM (clock read). Built on his word of about 3:30 PM on Sunday 11 October: a playable first month before the Tools Competition abstract is due (Tuesday 13 October, 11:59 PM Eastern), with a named household chosen from three, a Chromebook and phone and offline access line, and Spanish text.
 
-**Local only.** This repository exists on this computer and nowhere else. Nothing is pushed and no page is live. The publishing steps are at the end and wait for his word.
+**Live.** Published 11 October 2026 at 4:49 PM at https://fiscalpatriots.github.io/budgetquake/ from the public repository fiscalpatriots/budgetquake (main). Details are under Published at the end.
 
 ## Screens
 
@@ -55,7 +55,7 @@ The brief named ABSTRACT-K12-rev7.md. The current text is ABSTRACT-K12-rev10.md 
 | A month-end review shows what the budget absorbed and missed | Honored: balances, paid late or put off, reasons replayed, every dollar |
 | ...and the student revises it | Deferred. Revision belongs to the start of month two |
 | Six simulated months, then an unfamiliar household with no feedback, and a similar one weeks later | Deferred. The label says one month of six |
-| The first month, with a teacher view, is playable | Honored once published |
+| The first month, with a teacher view, is playable | Honored, live at https://fiscalpatriots.github.io/budgetquake/ |
 | An event agent and a coach, each bounded, with checks | Deferred. The prototype has no model and makes no network request; events are fixed per household |
 | Students never chat with a model | Honored (there is none) |
 | Every decision is logged; the rubric scores each reason for fixed costs, variable costs, wants against needs and surprise costs | The cards map to those four (rent and bills, food, the wanted item, the surprise). Decisions live in memory for the session only; nothing is logged or scored |
@@ -79,23 +79,10 @@ The sponsor's drafting document says "links to external materials will NOT be co
 - Contrast: every text pair is 5.06:1 or better (soft grey on white 7.20:1, red on white 7.20:1, white on ink 17.40:1); choice borders 4.54:1 and the focus ring 7.10:1 against the page.
 - No dashes, acronyms or employer names in the visible copy.
 
-## Publishing, for his word (not done)
+## Published
 
-The GitHub command-line tool is not installed on this computer. With it installed and signed in:
+Published on his word ("publish") on Sunday 11 October 2026. The public repository fiscalpatriots/budgetquake was created at 4:48 PM through the GitHub API with the fiscalpatriots sign-in already stored on this computer, commit 8019656 was pushed to main, and Pages was set to deploy from main, / (root). The page answered at 4:49 PM (clock read).
 
-```
-cd "C:\Users\Khaled\Documents\budgetquake"
-gh repo create fiscalpatriots/budgetquake --public --source . --remote origin --push
-gh api -X POST repos/fiscalpatriots/budgetquake/pages -f "source[branch]=main" -f "source[path]=/"
-```
+Live address: https://fiscalpatriots.github.io/budgetquake/ (43 characters, inside the 73 the abstract field can take). The served index.html matched the local file byte for byte, and the start screen with Jordan, Elena and Marcus rendered at 1,280 and 375 wide with no sideways scroll.
 
-Without it: create an empty public repository named budgetquake under fiscalpatriots at https://github.com/new (no readme, no license), then
-
-```
-git -C "C:\Users\Khaled\Documents\budgetquake" remote add origin https://github.com/fiscalpatriots/budgetquake.git
-git -C "C:\Users\Khaled\Documents\budgetquake" push -u origin main
-```
-
-and in the repository's Settings, Pages: deploy from a branch, main, / (root), Save.
-
-Expected address once Pages builds: https://fiscalpatriots.github.io/budgetquake/ (43 characters, inside the 73 the abstract field can take).
+To publish a later change: commit in this folder, then `git -C "C:\Users\Khaled\Documents\budgetquake" push`. Pages rebuilds from main within a minute or two.
