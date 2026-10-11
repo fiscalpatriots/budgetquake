@@ -1,0 +1,853 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
+<title>Budgetquake</title>
+<meta name="description" content="A playable first month of Budgetquake. An eighth grader picks a household, lives its month on its paycheck, and gives a reason for every choice. Runs offline in a browser, in English or Spanish.">
+<style>
+:root{
+  --paper:#f4f2ed;
+  --card:#ffffff;
+  --ink:#1a1a1a;
+  --soft:#53585c;
+  --rule:#d8d4cc;
+  --edge:#767676;
+  --accent:#0b5d3b;
+  --red:#9c3418;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-variant-numeric:tabular-nums}
+.wrap{max-width:608px;margin:0 auto;padding:0 16px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:16px 0 12px}
+.brand{font-size:18px;font-weight:700;line-height:1.25}
+.proto{font-size:14px;color:var(--soft);line-height:1.35}
+.tools{display:flex;gap:8px}
+.tool{min-height:44px;padding:0 14px;border:1px solid var(--ink);border-radius:8px;background:transparent;color:var(--ink);font:inherit;font-size:15px;font-weight:600;cursor:pointer}
+.tool[aria-pressed="true"]{background:var(--ink);color:#fff}
+@media (max-width:479px){.tools{width:100%}.tools .tool{flex:1 1 0;padding:0 8px}}
+.progress{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 16px;font-size:14px;color:var(--soft);padding:0 0 8px}
+.progress .bal{display:flex;flex-wrap:wrap;gap:2px 16px}
+.progress b{color:var(--ink);font-weight:600}
+.progress b.neg{color:var(--red)}
+.track{height:3px;background:var(--rule);border-radius:2px;margin:0 0 16px;overflow:hidden}
+.track i{display:block;height:100%;background:var(--ink)}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:24px}
+@media (max-width:479px){.card{padding:20px 16px}}
+.card:focus,[tabindex="-1"]:focus{outline:none}
+.result{font-size:14px;color:var(--soft);margin:0 0 12px;min-height:20px}
+h1{font-size:28px;line-height:1.2;margin:0 0 12px}
+h2{font-size:22px;line-height:1.25;margin:0 0 8px}
+h3{font-size:18px;line-height:1.3;margin:28px 0 8px}
+p{margin:0 0 12px}
+fieldset{border:0;margin:20px 0 0;padding:0;min-width:0}
+legend{font-size:18px;font-weight:600;line-height:1.3;padding:0;margin:0 0 10px}
+.choices{display:grid;grid-auto-rows:1fr;gap:10px}
+.choice{display:flex;align-items:center;gap:12px;min-height:56px;padding:12px 16px;border:1px solid var(--edge);border-radius:10px;background:#fff;color:var(--ink);cursor:pointer;font-weight:600;line-height:1.3}
+.choice input{-webkit-appearance:none;appearance:none;flex:0 0 auto;width:20px;height:20px;margin:0;border:2px solid var(--ink);border-radius:50%;background:#fff;cursor:pointer}
+.choice.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.choice.on input{border-color:#fff;background:#fff;box-shadow:inset 0 0 0 4px var(--ink)}
+.choice:has(input:focus-visible){outline:3px solid var(--accent);outline-offset:2px}
+.choice .txt{flex:1 1 auto;min-width:0}
+.choice .amt{flex:0 0 auto;white-space:nowrap}
+.hh .txt span{display:block}
+.hh .nm{font-size:18px;font-weight:700}
+.hh .job{font-weight:400}
+.hh .pay{font-weight:600}
+.hh .sit{font-weight:400;font-size:15px;color:var(--soft);margin-top:2px}
+.hh.on .sit{color:#e9e9e9}
+.reason{margin-top:20px}
+.reason label{display:block;font-size:16px;font-weight:600;margin:0 0 2px}
+.help{font-size:14px;color:var(--soft);margin:0 0 8px}
+textarea{display:block;width:100%;min-height:96px;overflow:hidden;padding:10px 12px;border:1px solid var(--edge);border-radius:8px;font:inherit;font-size:16px;color:var(--ink);background:#fff;resize:vertical}
+textarea::placeholder{color:#6b6f73}
+.hint{font-size:14px;color:var(--red);margin:8px 0 0}
+.hint:empty{margin:0}
+.btn{display:block;width:100%;min-height:48px;margin-top:16px;padding:10px 16px;border:1px solid var(--ink);border-radius:10px;background:var(--ink);color:#fff;font:inherit;font-size:16px;font-weight:600;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btnrow{display:grid;grid-template-columns:1fr;gap:10px;margin-top:24px}
+.btnrow .btn{margin-top:0}
+@media (min-width:560px){.btnrow{grid-template-columns:1fr 1fr}}
+.tool:focus-visible,.btn:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.sheet{width:100%;border-collapse:collapse;table-layout:fixed}
+.sheet td{padding:8px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+.sheet td.n{width:6.5em;text-align:right;white-space:nowrap;font-weight:600;padding-left:12px}
+.sheet td .sub{display:block;font-size:14px;color:var(--soft)}
+.sheet tr.total td{font-weight:700;border-top:1px solid var(--ink);border-bottom:0}
+.neg{color:var(--red)}
+.list{list-style:none;margin:0;padding:0}
+.list li{padding:12px 0;border-top:1px solid var(--rule)}
+.list li:first-child{border-top:0;padding-top:4px}
+.list p{margin:0 0 4px}
+.flags{list-style:decimal;padding-left:1.4em}
+.flags li{padding-left:4px}
+.k{font-size:14px;color:var(--soft)}
+.said{font-style:italic}
+.label{font-weight:600}
+details{margin-top:24px;border-top:1px solid var(--rule)}
+summary{display:list-item;padding:11px 0;min-height:44px;font-weight:600;cursor:pointer}
+.note{font-size:14px;color:var(--soft);margin-top:20px}
+footer{font-size:14px;color:var(--soft);padding:20px 0 32px}
+footer p{margin:0 0 6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="brand">Budgetquake</div>
+      <div class="proto" id="proto"></div>
+    </div>
+    <div class="tools">
+      <button class="tool" id="langBtn" type="button"></button>
+      <button class="tool" id="teachBtn" type="button" aria-pressed="false"></button>
+    </div>
+  </header>
+  <div id="progress"></div>
+  <main class="card" id="main" tabindex="-1"></main>
+  <footer id="foot"></footer>
+</div>
+<script>
+(function () {
+'use strict';
+
+/* Money is whole dollars. A negative amount uses the minus sign. */
+function f(n) { return (n < 0 ? '−' : '') + '$' + Math.abs(n).toLocaleString('en-US'); }
+function L(en, es) { return { en: en, es: es }; }
+function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function words(s) { var m = String(s).match(/[\p{L}\p{N}]+/gu); return m ? m.length : 0; }
+
+var OVERDRAFT = 30;
+
+var UI = {
+  en: {
+    proto: 'Prototype: one month of six',
+    lang: 'Español', langAria: 'Ver el juego en español',
+    teach: 'Teacher view', back: 'Back to the game',
+    privacy: 'Nothing you type is stored or sent. Closing the page clears it.',
+    access: 'Runs in the browser on a school Chromebook or a phone, and needs no internet once the page is open.',
+    spanish: 'The Spanish text is a prototype of the planned language support.',
+    startH: 'Choose a household',
+    startLead: 'You get its paycheck and its bills for one month. Every choice asks for one sentence on why, and your teacher reads those reasons.',
+    startQ: 'Whose month will you live?',
+    takeHome: function (n) { return 'Takes home ' + f(n) + ' a month'; },
+    startBtn: 'Start the month',
+    pickFirst: 'Choose a household first.',
+    step: function (n, t) { return 'Step ' + n + ' of ' + t; },
+    checking: 'Checking', savings: 'Savings',
+    begins: 'Your month begins.',
+    one: 'One sentence is enough.',
+    ph: 'I chose this because',
+    short: 'A few more words, please. Say what you weighed.',
+    cont: 'Continue', seeMonth: 'See the month',
+    srcBoth: function (a, b) { return 'You paid ' + f(a) + ' from savings and ' + f(b) + ' from checking.'; },
+    srcSav: 'Savings covered all of it.',
+    srcChk: 'It came out of checking.',
+    over: 'Checking went below zero, and the bank charged a $30 overdraft fee.',
+    endH: 'End of month 1',
+    stillOwed: 'Still owed',
+    lateH: 'Paid late or put off',
+    lateNone: 'Nothing was paid late or put off.',
+    overItem: function (t) { return 'Checking went below zero (' + t.toLowerCase() + '): $30 overdraft fee'; },
+    reasonsH: 'Your reasons',
+    ledgerH: 'Every dollar this month',
+    left: 'Left from last month', payL: 'Pay after taxes', moved: 'Moved to savings',
+    plusSav: function (n) { return 'plus ' + f(n) + ' from savings'; },
+    overFee: 'Overdraft fee',
+    endChk: 'Checking at the end of the month', endSav: 'Savings at the end of the month',
+    next: 'In the full game, five more months follow, then a household you have not met.',
+    again: 'Play another household',
+    tH: 'Teacher view',
+    tLead: function (name) { return name + "'s household, month 1. Each decision appears with the reason the student typed."; },
+    tSoFar: function (n, t) { return n + ' of ' + t + ' decisions made so far.'; },
+    tEmpty: 'No month has been played on this device yet. Choose a household and make a choice, and it appears here.',
+    tTop3: 'Three to discuss', tTopFew: 'To discuss so far',
+    tStep: function (n, t) { return 'Step ' + n + ': ' + t; },
+    tChose: 'Chose', tReason: 'Reason', tWhy: 'Why discuss',
+    tAll: 'Every decision',
+    tNote: 'Prototype. In the full game, a teacher opens a class with a code and sees every student. This view shows only the month played on this device.',
+    overNote: 'Checking went below zero here, and the bank charged a $30 overdraft fee.',
+    shortNote: 'The reason is short, so ask for more.',
+    prepaidToo: 'The phone is also on a smaller data plan.'
+  },
+  es: {
+    proto: 'Prototipo: un mes de seis',
+    lang: 'English', langAria: 'Show the game in English',
+    teach: 'Vista del docente', back: 'Volver al juego',
+    privacy: 'Nada de lo que escribes se guarda ni se envía. Al cerrar la página, se borra todo.',
+    access: 'Funciona en el navegador de una Chromebook escolar o de un teléfono, y no necesita internet una vez que la página está abierta.',
+    spanish: 'El texto en español es un prototipo del apoyo de idiomas que está planeado.',
+    startH: 'Elige un hogar',
+    startLead: 'Recibes su sueldo y sus cuentas durante un mes. Cada decisión te pide una oración que explique por qué, y tu docente lee esas razones.',
+    startQ: '¿El mes de quién vas a vivir?',
+    takeHome: function (n) { return 'Recibe ' + f(n) + ' al mes, ya sin impuestos'; },
+    startBtn: 'Empezar el mes',
+    pickFirst: 'Primero elige un hogar.',
+    step: function (n, t) { return 'Paso ' + n + ' de ' + t; },
+    checking: 'Cuenta corriente', savings: 'Ahorros',
+    begins: 'Empieza tu mes.',
+    one: 'Basta con una oración.',
+    ph: 'Elegí esto porque',
+    short: 'Unas palabras más, por favor. Di qué tomaste en cuenta.',
+    cont: 'Continuar', seeMonth: 'Ver el mes',
+    srcBoth: function (a, b) { return 'Pagaste ' + f(a) + ' con tus ahorros y ' + f(b) + ' con la cuenta corriente.'; },
+    srcSav: 'Tus ahorros cubrieron todo.',
+    srcChk: 'Salió de la cuenta corriente.',
+    over: 'La cuenta corriente quedó en negativo, y el banco cobró $30 por sobregiro.',
+    endH: 'Fin del mes 1',
+    stillOwed: 'Todavía se debe',
+    lateH: 'Pagado tarde o aplazado',
+    lateNone: 'No se pagó nada tarde ni se aplazó nada.',
+    overItem: function (t) { return 'La cuenta corriente quedó en negativo (' + t.toLowerCase() + '): cargo de $30 por sobregiro'; },
+    reasonsH: 'Tus razones',
+    ledgerH: 'Cada dólar de este mes',
+    left: 'Lo que quedó del mes pasado', payL: 'Sueldo sin impuestos', moved: 'Pasado a ahorros',
+    plusSav: function (n) { return 'más ' + f(n) + ' de ahorros'; },
+    overFee: 'Cargo por sobregiro',
+    endChk: 'Cuenta corriente a fin de mes', endSav: 'Ahorros a fin de mes',
+    next: 'En el juego completo vienen cinco meses más y después un hogar que no conoces.',
+    again: 'Jugar con otro hogar',
+    tH: 'Vista del docente',
+    tLead: function (name) { return 'Hogar de ' + name + ', mes 1. Cada decisión aparece con la razón que se escribió.'; },
+    tSoFar: function (n, t) { return n + ' de ' + t + ' decisiones tomadas hasta ahora.'; },
+    tEmpty: 'Todavía no se ha jugado ningún mes en este dispositivo. Elige un hogar y toma una decisión, y aparecerá aquí.',
+    tTop3: 'Tres para conversar', tTopFew: 'Para conversar hasta ahora',
+    tStep: function (n, t) { return 'Paso ' + n + ': ' + t; },
+    tChose: 'Eligió', tReason: 'Razón', tWhy: 'Por qué conversarlo',
+    tAll: 'Todas las decisiones',
+    tNote: 'Prototipo. En el juego completo, el docente abre una clase con un código y ve a cada estudiante. Esta vista muestra solo el mes jugado en este dispositivo.',
+    overNote: 'Aquí la cuenta corriente quedó en negativo, y el banco cobró $30 por sobregiro.',
+    shortNote: 'La razón es corta, así que pide que la explique mejor.',
+    prepaidToo: 'Además, el teléfono quedó con un plan de menos datos.'
+  }
+};
+
+/* Card builders. Every figure on a card is computed from the numbers passed in, so the text and the arithmetic cannot drift apart. */
+function payday(o) {
+  var autoTotal = o.auto.reduce(function (s, x) { return s + x.a; }, 0);
+  var avail = o.start + o.pay - autoTotal;
+  var a = o.saves[0], b = o.saves[1];
+  return {
+    kind: 'payday',
+    title: L('Payday', 'Día de pago'),
+    body: L(
+      'Your pay of ' + f(o.pay) + ' lands in checking. You also have ' + f(o.start) + ' left from last month. ' + o.autoEn + ' come out on their own. That is ' + f(autoTotal) + ', so you have ' + f(avail) + ' to plan with.',
+      'Tu sueldo de ' + f(o.pay) + ' llega a tu cuenta corriente. También te quedan ' + f(o.start) + ' del mes pasado. ' + o.autoEs + ' se pagan solos. Son ' + f(autoTotal) + ', así que tienes ' + f(avail) + ' para planear.'
+    ),
+    q: L('How much do you move to savings now?', '¿Cuánto pasas a tus ahorros ahora?'),
+    prompt: L('Why this amount?', '¿Por qué esta cantidad?'),
+    choices: [
+      { label: L('Keep it all in checking for now', 'Dejarlo todo en la cuenta corriente por ahora'), amt: 0, save: 0, tag: 'nosave', w: 2,
+        done: L('Nothing moved to savings.', 'No pasaste nada a tus ahorros.'),
+        note: L('Nothing was set aside on payday. Ask what a cushion would change when a surprise comes.', 'No se apartó nada el día de pago. Pregunta qué cambiaría un colchón de ahorro cuando llegue un imprevisto.') },
+      { label: L('Move ' + f(a) + ' to savings', 'Pasar ' + f(a) + ' a ahorros'), amt: a, save: a, w: 1,
+        done: L('You moved ' + f(a) + ' to savings.', 'Pasaste ' + f(a) + ' a tus ahorros.'),
+        note: L('Some money was set aside before any bill was paid. Ask how the amount was chosen.', 'Se apartó algo de dinero antes de pagar las cuentas. Pregunta cómo se eligió la cantidad.') },
+      { label: L('Move ' + f(b) + ' to savings', 'Pasar ' + f(b) + ' a ahorros'), amt: b, save: b, tag: 'bigsave', w: 1,
+        done: L('You moved ' + f(b) + ' to savings.', 'Pasaste ' + f(b) + ' a tus ahorros.'),
+        note: L('The largest amount went to savings. Ask whether checking still covered the rest of the month.', 'La cantidad más grande fue a ahorros. Pregunta si la cuenta corriente alcanzó para el resto del mes.') }
+    ]
+  };
+}
+
+function rent(o) {
+  return {
+    kind: 'bill', item: L('Rent', 'Alquiler'),
+    title: L('Rent is due', 'Vence el alquiler'),
+    body: L(
+      'Rent on your ' + o.homeEn + ' is ' + f(o.rent) + ', due on the 1st. The lease allows five days, then adds a ' + f(o.fee) + ' late fee. The landlord also offers renter’s insurance for ' + f(o.ins) + ' a month.',
+      'El alquiler de tu ' + o.homeEs + ' es de ' + f(o.rent) + ' y vence el día 1. El contrato da cinco días de gracia y después cobra un recargo de ' + f(o.fee) + '. El dueño también ofrece un seguro de inquilino por ' + f(o.ins) + ' al mes.'
+    ),
+    q: L('How do you pay it?', '¿Cómo lo pagas?'),
+    prompt: L('Why pay rent this way?', '¿Por qué pagas el alquiler así?'),
+    choices: [
+      { label: L('Pay the full rent today', 'Pagar todo el alquiler hoy'), amt: o.rent, w: 0,
+        done: L('Rent is paid.', 'El alquiler está pagado.'),
+        note: L('Rent was paid on time. Ask what else was weighed before paying it.', 'El alquiler se pagó a tiempo. Pregunta qué más se tomó en cuenta antes de pagarlo.') },
+      { label: L('Pay it and add renter’s insurance', 'Pagarlo y agregar el seguro de inquilino'), amt: o.rent + o.ins, w: 1,
+        done: L('Rent is paid, and your things are insured.', 'El alquiler está pagado y tus cosas tienen seguro.'),
+        note: L('Renter’s insurance was added. Ask what it protects and what it costs over a year (' + f(o.ins * 12) + ').', 'Se agregó el seguro de inquilino. Pregunta qué protege y cuánto cuesta en un año (' + f(o.ins * 12) + ').') },
+      { label: L('Pay a week late to keep cash on hand', 'Pagar una semana tarde para tener efectivo a mano'), amt: o.rent + o.fee, w: 4,
+        late: L('Rent paid a week late: ' + f(o.fee) + ' late fee', 'Alquiler pagado una semana tarde: recargo de ' + f(o.fee)),
+        done: L('Rent goes out a week late, with a ' + f(o.fee) + ' late fee.', 'El alquiler sale una semana tarde, con un recargo de ' + f(o.fee) + '.'),
+        note: L('Rent was paid late on purpose, for a ' + f(o.fee) + ' fee. Ask what the cash was held for.', 'El alquiler se pagó tarde a propósito, con un recargo de ' + f(o.fee) + '. Pregunta para qué se guardaba el efectivo.') }
+    ]
+  };
+}
+
+function phone(o) {
+  var save = o.bill - o.pre;
+  return {
+    kind: 'bill', item: L('Phone', 'Teléfono'),
+    title: L('The phone bill', 'La cuenta del teléfono'),
+    body: L(o.bodyEn, o.bodyEs),
+    q: L('What do you do with the phone bill?', '¿Qué haces con la cuenta del teléfono?'),
+    prompt: L('Why this choice for the phone?', '¿Por qué decidiste esto con el teléfono?'),
+    choices: [
+      { label: L('Pay the ' + f(o.bill) + ' bill on time', 'Pagar la cuenta de ' + f(o.bill) + ' a tiempo'), amt: o.bill, w: 0,
+        done: L('The phone bill is paid.', 'La cuenta del teléfono está pagada.'),
+        note: L('The bill was paid on time. Ask whether a cheaper plan was considered.', 'La cuenta se pagó a tiempo. Pregunta si se pensó en un plan más barato.') },
+      { label: L(o.preEn, o.preEs), amt: o.pre, tag: 'prepaid', w: 1,
+        done: L('You switched to prepaid.', 'Cambiaste a prepagado.'),
+        note: L('The cheaper plan saves ' + f(save) + ' a month, ' + f(save * 12) + ' a year. Ask what gets harder with less data.', 'El plan más barato ahorra ' + f(save) + ' al mes, ' + f(save * 12) + ' al año. Pregunta qué se complica con menos datos.') },
+      { label: L('Pay next week, with a ' + f(o.fee) + ' late fee', 'Pagar la próxima semana, con un recargo de ' + f(o.fee)), amt: o.bill + o.fee, w: 3,
+        late: L('Phone bill paid late: ' + f(o.fee) + ' fee', 'Teléfono pagado tarde: recargo de ' + f(o.fee)),
+        done: L('The phone bill goes out late, with a ' + f(o.fee) + ' fee.', 'La cuenta del teléfono sale tarde, con un recargo de ' + f(o.fee) + '.'),
+        note: L('A ' + f(o.fee) + ' fee was paid to delay a ' + f(o.bill) + ' bill. Ask what the extra week was for.', 'Se pagó un recargo de ' + f(o.fee) + ' para atrasar una cuenta de ' + f(o.bill) + '. Pregunta para qué servía la semana extra.') }
+    ]
+  };
+}
+
+function utility(o) {
+  var total = o.elec + o.net;
+  return {
+    kind: 'bill', item: L('Electric and internet', 'Luz e internet'),
+    title: L('The electric and internet bill', 'La cuenta de luz e internet'),
+    body: L(
+      'This bill is ' + f(total) + '. Electricity is ' + f(o.elec) + ', and home internet is ' + f(o.net) + '. ' + o.extraEn,
+      'Esta cuenta es de ' + f(total) + '. La electricidad cuesta ' + f(o.elec) + ' y el internet en casa, ' + f(o.net) + '. ' + o.extraEs
+    ),
+    q: L('What do you do with this bill?', '¿Qué haces con esta cuenta?'),
+    prompt: L('Why handle the bill this way?', '¿Por qué manejas la cuenta así?'),
+    choices: [
+      { label: L('Pay the full ' + f(total), 'Pagar los ' + f(total) + ' completos'), amt: total, w: 0,
+        done: L('The electric and internet bill is paid.', 'La cuenta de luz e internet está pagada.'),
+        note: L('The bill was paid in full. Ask which part of it could change next month.', 'La cuenta se pagó completa. Pregunta qué parte podría cambiar el próximo mes.') },
+      { label: L('Cancel the internet and pay ' + f(o.elec) + ' for electricity', 'Cancelar el internet y pagar ' + f(o.elec) + ' de luz'), amt: o.elec, tag: 'cutnet', w: o.cutW,
+        done: L('The internet is canceled, and electricity is paid.', 'El internet quedó cancelado y la luz está pagada.'),
+        note: L(o.cutNoteEn, o.cutNoteEs) },
+      { label: L('Pay next week, with a ' + f(o.fee) + ' late fee', 'Pagar la próxima semana, con un recargo de ' + f(o.fee)), amt: total + o.fee, w: 3,
+        late: L('Electric and internet paid late: ' + f(o.fee) + ' fee', 'Luz e internet pagados tarde: recargo de ' + f(o.fee)),
+        done: L('The bill goes out late, with a ' + f(o.fee) + ' fee.', 'La cuenta sale tarde, con un recargo de ' + f(o.fee) + '.'),
+        note: L('A ' + f(o.fee) + ' fee was paid to delay a ' + f(total) + ' bill. Ask what the extra week was for.', 'Se pagó un recargo de ' + f(o.fee) + ' para atrasar una cuenta de ' + f(total) + '. Pregunta para qué servía la semana extra.') }
+    ]
+  };
+}
+
+function food(o) {
+  return {
+    kind: 'bill', item: L('Food', 'Comida'),
+    title: L('Food for the month', 'La comida del mes'),
+    body: L(
+      'Food for ' + o.whoEn + ' for the month. Cooking from a list costs the least, and delivery adds up fast.',
+      'Comida para ' + o.whoEs + ' durante el mes. Cocinar con una lista es lo más barato, y los pedidos a domicilio suben rápido.'
+    ),
+    q: L('How will the household eat this month?', '¿Cómo va a comer el hogar este mes?'),
+    prompt: L('Why this way of eating?', '¿Por qué elegiste esta forma de comer?'),
+    choices: [
+      { label: L('Plan meals and cook at home', 'Planear las comidas y cocinar en casa'), amt: o.a, w: 0,
+        done: L('Groceries are bought for the month.', 'La comida del mes está comprada.'),
+        note: L('The household eats at the lowest cost. Ask how the plan holds up in a busy week.', 'El hogar come al costo más bajo. Pregunta cómo aguanta el plan en una semana ocupada.') },
+      { label: L('Cook most days, takeout on weekends', 'Cocinar casi todos los días y pedir comida los fines de semana'), amt: o.b, w: 1,
+        done: L('Groceries are bought, with takeout on weekends.', 'La comida está comprada, con pedidos los fines de semana.'),
+        note: L('This is the middle path. Ask what the weekend takeout is worth to this household.', 'Es el punto medio. Pregunta cuánto vale para este hogar pedir comida los fines de semana.') },
+      { label: L('Mostly takeout and delivery', 'Casi siempre comida para llevar o a domicilio'), amt: o.c, w: 2,
+        done: L('It is mostly takeout this month.', 'Este mes se come casi todo de pedidos.'),
+        note: L('Food cost ' + f(o.c - o.a) + ' more than cooking at home. Ask what else that money could have covered.', 'La comida costó ' + f(o.c - o.a) + ' más que cocinar en casa. Pregunta qué más se pudo pagar con ese dinero.') }
+    ]
+  };
+}
+
+var HH = [
+  {
+    name: 'Jordan',
+    job: L('Medical assistant at a family health clinic', 'Asistente en una clínica de salud familiar'),
+    sit: L('Lives alone in a studio apartment in Annandale and rides the bus to work.', 'Vive en un estudio en Annandale sin compañeros de casa y va al trabajo en autobús.'),
+    pay: 3080, start: 140,
+    auto: [
+      { t: L('Student loan payment', 'Pago del préstamo estudiantil'), a: 180 },
+      { t: L('Bus fare', 'Pasajes de autobús'), a: 90 },
+      { t: L('Laundry', 'Lavandería'), a: 40 },
+      { t: L('Toiletries', 'Artículos de aseo'), a: 30 }
+    ],
+    build: function (h) {
+      return [
+        payday({ pay: h.pay, start: h.start, auto: h.auto, saves: [150, 300],
+          autoEn: 'Your student loan, bus fare, laundry and toiletries',
+          autoEs: 'El préstamo estudiantil, el autobús, la lavandería y los artículos de aseo' }),
+        rent({ rent: 1640, ins: 14, fee: 75, homeEn: 'studio', homeEs: 'estudio' }),
+        phone({ bill: 68, pre: 40, fee: 10,
+          bodyEn: 'Your phone plan is $68 a month, due on the 10th. A prepaid plan with less data costs $40 and has no contract.',
+          bodyEs: 'Tu plan de teléfono cuesta $68 al mes y vence el día 10. Un plan prepagado con menos datos cuesta $40 y no tiene contrato.',
+          preEn: 'Switch to the $40 prepaid plan', preEs: 'Cambiar al plan prepagado de $40' }),
+        utility({ elec: 59, net: 65, fee: 10, cutW: 2,
+          extraEn: 'You could cancel the internet and use your phone’s data instead.',
+          extraEs: 'Podrías cancelar el internet y usar los datos de tu teléfono.',
+          cutNoteEn: 'Home internet was cut to save $65. Ask how the phone’s data will cover it.',
+          cutNoteEs: 'Se canceló el internet de casa para ahorrar $65. Pregunta cómo lo van a cubrir los datos del teléfono.' }),
+        food({ whoEn: 'one person', whoEs: 'una persona', a: 320, b: 430, c: 620 }),
+        {
+          kind: 'want', item: L('Concert', 'Concierto'),
+          title: L('A concert with friends', 'Un concierto con amigos'),
+          body: L('Your friends are going to see a band you love next Saturday. A floor ticket with fees is $145, and a seat in the upper level is $70.',
+                  'Tus amigos van a ver a una banda que te encanta el próximo sábado. Una entrada de pista con cargos cuesta $145, y un asiento en el nivel de arriba, $70.'),
+          q: L('Do you go?', '¿Vas?'),
+          prompt: L('What made this the right call?', '¿Qué hizo que esta fuera la mejor decisión?'),
+          choices: [
+            { label: L('Buy the floor ticket', 'Comprar la entrada de pista'), amt: 145, tag: 'bigwant', w: 2,
+              done: L('The floor ticket is bought.', 'Compraste la entrada de pista.'),
+              note: L('The full-price ticket was bought. Ask how it fit with the money left and with savings.', 'Se compró la entrada más cara. Pregunta cómo encajaba con el dinero que quedaba y con los ahorros.') },
+            { label: L('Buy the upper-level seat', 'Comprar el asiento de arriba'), amt: 70, w: 1,
+              done: L('The upper-level seat is bought.', 'Compraste el asiento de arriba.'),
+              note: L('The cheaper seat still gets Jordan there. Ask how time with friends was weighed against the cost.', 'El asiento más barato igual le permite ir. Pregunta cómo se comparó el tiempo con amigos y el costo.') },
+            { label: L('Skip this one', 'No ir esta vez'), amt: 0, w: 1,
+              done: L('You skip the concert this time.', 'Esta vez no vas al concierto.'),
+              note: L('The concert was skipped. Ask whether that was about this month or about saving for later.', 'Se decidió no ir al concierto. Pregunta si fue por el dinero de este mes o por ahorrar para después.') }
+          ]
+        },
+        {
+          kind: 'surprise', item: L('Screen repair', 'Reparación de pantalla'),
+          title: L('Your phone screen cracks', 'Se rompe la pantalla de tu teléfono'),
+          body: L('You drop your phone, and one side of the screen stops responding to touch. The clinic texts shift changes to this phone. A phone shop charges $249 with a 90-day warranty, and a mall kiosk charges $159 with none. Money in savings is used first.',
+                  'Se te cae el teléfono y un lado de la pantalla deja de responder. La clínica te manda los cambios de turno a este teléfono. Una tienda de teléfonos cobra $249 con garantía de 90 días, y un quiosco del centro comercial cobra $159 sin garantía. Si tienes ahorros, se usan primero.'),
+          q: L('What do you do?', '¿Qué haces?'),
+          prompt: L('What did you weigh?', '¿Qué tomaste en cuenta?'),
+          choices: [
+            { label: L('Repair it at the phone shop', 'Repararlo en la tienda de teléfonos'), amt: 249, w: 1,
+              done: L('The phone is repaired, with a 90-day warranty.', 'El teléfono quedó reparado, con garantía de 90 días.'),
+              note: L('The safer repair cost $90 more. Ask what the warranty is worth.', 'La reparación más segura costó $90 más. Pregunta cuánto vale la garantía.') },
+            { label: L('Repair it at the kiosk', 'Repararlo en el quiosco'), amt: 159, w: 1,
+              done: L('The phone is repaired at the kiosk.', 'El teléfono quedó reparado en el quiosco.'),
+              note: L('The cheaper repair has no warranty. Ask what happens if it fails again.', 'La reparación más barata no tiene garantía. Pregunta qué pasa si vuelve a fallar.') },
+            { label: L('Keep using it cracked for now', 'Seguir usándolo así por ahora'), amt: 0, w: 4,
+              putoff: L('Screen repair put off', 'Reparación de la pantalla aplazada'),
+              done: L('The phone stays cracked for now.', 'El teléfono sigue roto por ahora.'),
+              note: L('The repair was put off, and work messages arrive on this phone. Ask what that risks next month.', 'Se aplazó la reparación, y los mensajes del trabajo llegan a este teléfono. Pregunta qué se arriesga el próximo mes.') }
+          ]
+        }
+      ];
+    }
+  },
+  {
+    name: 'Elena',
+    job: L('Electrician with a building contractor', 'Electricista en una empresa de construcción'),
+    sit: L('Raises her eight-year-old son in a two-bedroom apartment in Woodbridge and drives to job sites.', 'Cría a su hijo de ocho años en un apartamento de dos habitaciones en Woodbridge y va en carro a las obras.'),
+    pay: 4420, start: 210,
+    auto: [
+      { t: L('After-school program', 'Programa después de clases'), a: 420 },
+      { t: L('Car insurance', 'Seguro del carro'), a: 138 },
+      { t: L('Gas', 'Gasolina'), a: 170 },
+      { t: L('School lunches', 'Almuerzos escolares'), a: 52 }
+    ],
+    build: function (h) {
+      return [
+        payday({ pay: h.pay, start: h.start, auto: h.auto, saves: [200, 400],
+          autoEn: 'Your son’s after-school program, car insurance, gas and his school lunches',
+          autoEs: 'El programa después de clases de tu hijo, el seguro del carro, la gasolina y sus almuerzos escolares' }),
+        rent({ rent: 2050, ins: 16, fee: 100, homeEn: 'two-bedroom apartment', homeEs: 'apartamento de dos habitaciones' }),
+        phone({ bill: 85, pre: 45, fee: 10,
+          bodyEn: 'Your phone plan is $85 a month, due on the 10th. A prepaid plan with less data costs $45 and has no contract.',
+          bodyEs: 'Tu plan de teléfono cuesta $85 al mes y vence el día 10. Un plan prepagado con menos datos cuesta $45 y no tiene contrato.',
+          preEn: 'Switch to the $45 prepaid plan', preEs: 'Cambiar al plan prepagado de $45' }),
+        utility({ elec: 96, net: 90, fee: 10, cutW: 3,
+          extraEn: 'Your son does his homework online most nights. You could cancel the internet. He could use the computers at the library.',
+          extraEs: 'Tu hijo hace la tarea en línea casi todas las noches. Podrías cancelar el internet. Él podría usar las computadoras de la biblioteca.',
+          cutNoteEn: 'Home internet was cut, and her son does homework online. Ask where homework happens now.',
+          cutNoteEs: 'Se canceló el internet de casa, y su hijo hace la tarea en línea. Pregunta dónde va a hacer la tarea ahora.' }),
+        food({ whoEn: 'you and your son', whoEs: 'ti y tu hijo', a: 540, b: 690, c: 940 }),
+        {
+          kind: 'want', item: L('Birthday bike', 'Bicicleta de cumpleaños'),
+          title: L('A birthday bike', 'Una bicicleta de cumpleaños'),
+          body: L('Your son turns nine at the end of the month and has asked for a bike. A new one from a store costs $220, or the store will split it into four payments of $55 every two weeks. A used one from a neighborhood listing costs $85.',
+                  'Tu hijo cumple nueve años a fin de mes y te pidió una bicicleta. Una nueva en la tienda cuesta $220, o la tienda la divide en cuatro pagos de $55 cada dos semanas. Una usada de un anuncio del vecindario cuesta $85.'),
+          q: L('What do you do about the bike?', '¿Qué haces con la bicicleta?'),
+          prompt: L('What made this the right call?', '¿Qué hizo que esta fuera la mejor decisión?'),
+          choices: [
+            { label: L('Buy the new bike', 'Comprar la bicicleta nueva'), amt: 220, tag: 'bigwant', w: 2,
+              done: L('The new bike is bought.', 'Compraste la bicicleta nueva.'),
+              note: L('The full price was paid in the birthday month. Ask how it fit with the money left and with savings.', 'Se pagó el precio completo en el mes del cumpleaños. Pregunta cómo encajaba con el dinero que quedaba y con los ahorros.') },
+            { label: L('Buy the used bike', 'Comprar la bicicleta usada'), amt: 85, w: 1,
+              done: L('The used bike is bought.', 'Compraste la bicicleta usada.'),
+              note: L('A used bike cost $135 less. Ask how the student judged it good enough.', 'La bicicleta usada costó $135 menos. Pregunta cómo se decidió que era suficiente.') },
+            { label: L('Buy the new bike in four payments', 'Comprar la nueva en cuatro pagos'), amt: 55, owed: 165, w: 3,
+              owedText: L('Bike: $165 still owed in three payments', 'Bicicleta: faltan $165 en tres pagos'),
+              done: L('The first $55 is paid, and $165 is still owed.', 'Pagaste los primeros $55, y todavía se deben $165.'),
+              note: L('The bike was split into four payments, and $165 carries into next month. Ask how those payments fit the next budget.', 'La bicicleta se dividió en cuatro pagos, y $165 pasan al próximo mes. Pregunta cómo caben esos pagos en el próximo presupuesto.') },
+            { label: L('Wait and save for it next month', 'Esperar y ahorrar para el próximo mes'), amt: 0, w: 1,
+              done: L('The bike waits until next month.', 'La bicicleta espera hasta el próximo mes.'),
+              note: L('The bike waits a month. Ask how the student would explain the wait to a nine-year-old.', 'La bicicleta espera un mes. Pregunta cómo se le explicaría la espera a un niño de nueve años.') }
+          ]
+        },
+        {
+          kind: 'surprise', item: L('Brake repair', 'Reparación de frenos'),
+          title: L('The brakes start grinding', 'Los frenos empiezan a rechinar'),
+          body: L('Your brakes start grinding on the way to a job site. The shop quotes $640 for new pads and rotors, or $310 for pads alone, which buys a few months. Money in savings is used first.',
+                  'Los frenos de tu carro empiezan a rechinar camino a una obra. El taller cobra $640 por pastillas y discos nuevos, o $310 solo por las pastillas, lo que te da unos meses. Si tienes ahorros, se usan primero.'),
+          q: L('What do you do?', '¿Qué haces?'),
+          prompt: L('What did you weigh?', '¿Qué tomaste en cuenta?'),
+          choices: [
+            { label: L('Replace the pads and rotors now', 'Cambiar pastillas y discos ahora'), amt: 640, w: 1,
+              done: L('The brakes are fixed.', 'Los frenos quedaron arreglados.'),
+              note: L('The full repair cost $640. Ask how savings and checking shared it.', 'La reparación completa costó $640. Pregunta cómo se repartió entre ahorros y cuenta corriente.') },
+            { label: L('Replace only the pads for now', 'Cambiar solo las pastillas por ahora'), amt: 310, w: 2,
+              putoff: L('Rotors still need work soon', 'Los discos necesitan arreglo pronto'),
+              done: L('The pads are new, and the rotors will need work soon.', 'Las pastillas son nuevas, y los discos necesitarán arreglo pronto.'),
+              note: L('A partial repair buys time. Ask when the rotors will be paid for.', 'Una reparación parcial da tiempo. Pregunta cuándo se van a pagar los discos.') },
+            { label: L('Put it off and drive carefully', 'Aplazarlo y manejar con cuidado'), amt: 0, w: 6,
+              putoff: L('Brake repair put off', 'Reparación de frenos aplazada'),
+              done: L('The brakes wait for another month.', 'Los frenos quedan sin arreglar otro mes.'),
+              note: L('The brakes are unsafe on the drive to job sites. Ask what this risks for safety and for work.', 'Los frenos no son seguros camino a las obras. Pregunta qué se arriesga en seguridad y en el trabajo.') }
+          ]
+        }
+      ];
+    }
+  },
+  {
+    name: 'Marcus',
+    job: L('Respiratory therapist at a hospital', 'Terapeuta respiratorio en un hospital'),
+    sit: L('Shares a two-bedroom apartment in Herndon with his mother, who is retired, and covers the rent and bills.', 'Comparte un apartamento de dos habitaciones en Herndon con su madre, que está jubilada, y él paga el alquiler y las cuentas.'),
+    pay: 5140, start: 260,
+    auto: [
+      { t: L('Car payment', 'Pago del carro'), a: 365 },
+      { t: L('Car insurance', 'Seguro del carro'), a: 121 },
+      { t: L('Gas', 'Gasolina'), a: 140 },
+      { t: L('Your mother’s prescriptions', 'Medicinas de tu madre'), a: 85 }
+    ],
+    build: function (h) {
+      return [
+        payday({ pay: h.pay, start: h.start, auto: h.auto, saves: [250, 500],
+          autoEn: 'Your car payment, car insurance, gas and your mother’s prescriptions',
+          autoEs: 'El pago del carro, el seguro del carro, la gasolina y las medicinas de tu madre' }),
+        rent({ rent: 2450, ins: 16, fee: 100, homeEn: 'two-bedroom apartment', homeEs: 'apartamento de dos habitaciones' }),
+        phone({ bill: 110, pre: 70, fee: 10,
+          bodyEn: 'The plan for your phone and your mother’s is $110 a month, due on the 10th. Two prepaid lines with less data cost $70 and have no contract.',
+          bodyEs: 'El plan de tu teléfono y el de tu madre cuesta $110 al mes y vence el día 10. Dos líneas prepagadas con menos datos cuestan $70 y no tienen contrato.',
+          preEn: 'Switch to two prepaid lines for $70', preEs: 'Cambiar a dos líneas prepagadas por $70' }),
+        utility({ elec: 112, net: 93, fee: 10, cutW: 3,
+          extraEn: 'Your mother video-calls her sister most evenings. You could cancel the internet and use your phone’s data instead.',
+          extraEs: 'Tu madre hace videollamadas con su hermana casi todas las noches. Podrías cancelar el internet y usar los datos de tu teléfono.',
+          cutNoteEn: 'Home internet was cut, and his mother uses it every evening. Ask how that was talked over at home.',
+          cutNoteEs: 'Se canceló el internet de casa, y su madre lo usa todas las noches. Pregunta cómo se habló en casa.' }),
+        food({ whoEn: 'you and your mother', whoEs: 'ti y tu madre', a: 610, b: 780, c: 1090 }),
+        {
+          kind: 'want', item: L('Wedding', 'Boda'),
+          title: L('A friend’s wedding', 'La boda de un amigo'),
+          body: L('A close friend is getting married in Richmond, two hours away. A weekend with a hotel and a gift comes to $340. Driving down for the day with a gift is $150, and a gift alone is $75.',
+                  'Un buen amigo se casa en Richmond, a dos horas de aquí. Un fin de semana con hotel y regalo cuesta $340. Ir y volver el mismo día con un regalo cuesta $150, y solo el regalo, $75.'),
+          q: L('What do you do?', '¿Qué haces?'),
+          prompt: L('What made this the right call?', '¿Qué hizo que esta fuera la mejor decisión?'),
+          choices: [
+            { label: L('Go for the weekend', 'Ir todo el fin de semana'), amt: 340, tag: 'bigwant', w: 2,
+              done: L('You spend the weekend in Richmond.', 'Pasas el fin de semana en Richmond.'),
+              note: L('The full weekend was chosen. Ask how it fit with the money left and with savings.', 'Se eligió el fin de semana completo. Pregunta cómo encajaba con el dinero que quedaba y con los ahorros.') },
+            { label: L('Drive down for the day', 'Ir y volver el mismo día'), amt: 150, w: 1,
+              done: L('You make a day trip to the wedding.', 'Vas a la boda y vuelves el mismo día.'),
+              note: L('A day trip cost $190 less than the weekend. Ask what was given up.', 'El viaje de un día costó $190 menos que el fin de semana. Pregunta a qué se renunció.') },
+            { label: L('Send a gift and stay home', 'Mandar un regalo y quedarse en casa'), amt: 75, w: 1,
+              done: L('A gift is on its way to your friend.', 'El regalo va en camino a tu amigo.'),
+              note: L('Only a gift was sent. Ask how the friendship was weighed against the cost.', 'Solo se mandó un regalo. Pregunta cómo se comparó la amistad con el costo.') }
+          ]
+        },
+        {
+          kind: 'surprise', item: L('Ankle care', 'Atención del tobillo'),
+          title: L('A sprained ankle', 'Un tobillo torcido'),
+          body: L('You twist your ankle at a pickup soccer game on Saturday night. It swells, and you work twelve-hour shifts on your feet. Your insurance copay is $350 at the emergency room tonight, or $75 at urgent care in the morning plus $90 for an X‑ray. Money in savings is used first.',
+                  'Te tuerces el tobillo en un partido de fútbol el sábado por la noche. Se hincha, y trabajas turnos de doce horas de pie. Con tu seguro, el copago es de $350 en la sala de emergencias esta noche, o de $75 en atención urgente por la mañana, más $90 por una radiografía. Si tienes ahorros, se usan primero.'),
+          q: L('What do you do?', '¿Qué haces?'),
+          prompt: L('What did you weigh?', '¿Qué tomaste en cuenta?'),
+          choices: [
+            { label: L('Go to the emergency room tonight', 'Ir a la sala de emergencias esta noche'), amt: 350, w: 1,
+              done: L('A doctor sees you tonight, and it is a sprain.', 'Te atiende un médico esta noche, y es una torcedura.'),
+              note: L('The fastest care cost $185 more than urgent care. Ask what made tonight worth it.', 'La atención más rápida costó $185 más que la atención urgente. Pregunta por qué valía la pena ir esa noche.') },
+            { label: L('Go to urgent care in the morning', 'Ir a atención urgente por la mañana'), amt: 165, w: 1,
+              done: L('A doctor sees you in the morning, and it is a sprain.', 'Te atiende un médico por la mañana, y es una torcedura.'),
+              note: L('Care waited until morning. Ask how the student judged it could wait a night.', 'La atención esperó hasta la mañana. Pregunta cómo se decidió que podía esperar una noche.') },
+            { label: L('Ice it at home and wait', 'Ponerle hielo en casa y esperar'), amt: 0, w: 5,
+              putoff: L('Ankle not seen by a doctor', 'Tobillo sin revisión médica'),
+              done: L('The ankle waits without a doctor.', 'El tobillo sigue sin revisión médica.'),
+              note: L('No doctor saw the ankle, and the job keeps Marcus on his feet. Ask what this risks for his health and his pay.', 'Ningún médico revisó el tobillo, y el trabajo lo tiene de pie todo el día. Pregunta qué se arriesga en su salud y en su sueldo.') }
+          ]
+        }
+      ];
+    }
+  }
+];
+HH.forEach(function (h) {
+  h.cards = h.build(h);
+  h.autoTotal = h.auto.reduce(function (s, x) { return s + x.a; }, 0);
+});
+
+/* State lives in memory only. Nothing is written to storage or sent anywhere. */
+function fresh(lang) {
+  return { lang: lang || 'en', screen: 'start', teacher: false, pick: null, hh: null, step: 0, sel: null, draft: '', hint: '', checking: 0, savings: 0, owed: 0, decisions: [] };
+}
+var S = fresh('en');
+
+var $ = function (id) { return document.getElementById(id); };
+var main = $('main');
+
+function cardAt(d) { return HH[S.hh].cards[d.step]; }
+function choiceAt(d) { return cardAt(d).choices[d.choice]; }
+function shownAmount(d) { var ch = choiceAt(d); return ch.save !== undefined ? ch.save : ch.amt; }
+/* The choice as the teacher reads it: the label, plus its amount when the label does not already say it. */
+function choseText(d, l) {
+  var label = choiceAt(d).label[l], amt = f(shownAmount(d));
+  return label.indexOf(amt) >= 0 ? label : label + ' (' + amt + ')';
+}
+
+function resultText(d, l) {
+  var u = UI[l], c = cardAt(d), ch = choiceAt(d), out = ch.done[l];
+  if (c.kind === 'surprise' && ch.amt > 0) {
+    if (d.fromSav > 0 && d.fromChk > 0) out += ' ' + u.srcBoth(d.fromSav, d.fromChk);
+    else if (d.fromSav > 0) out += ' ' + u.srcSav;
+    else if (!d.overdraft) out += ' ' + u.srcChk;
+  }
+  if (d.overdraft) out += ' ' + u.over;
+  return out;
+}
+
+function apply(choiceIndex, reason) {
+  var h = HH[S.hh], c = h.cards[S.step], ch = c.choices[choiceIndex];
+  var d = { step: S.step, choice: choiceIndex, reason: reason.trim(), savBefore: S.savings, chkBefore: S.checking, fromSav: 0, fromChk: 0, overdraft: false };
+  if (c.kind === 'payday') {
+    S.checking -= ch.save; S.savings += ch.save; d.fromChk = ch.save;
+  } else if (c.kind === 'surprise') {
+    var fs = Math.min(S.savings, ch.amt);
+    S.savings -= fs; S.checking -= (ch.amt - fs); d.fromSav = fs; d.fromChk = ch.amt - fs;
+  } else {
+    S.checking -= ch.amt; d.fromChk = ch.amt;
+  }
+  if (ch.owed) S.owed += ch.owed;
+  if (c.kind !== 'payday' && d.fromChk > 0 && S.checking < 0) { S.checking -= OVERDRAFT; d.overdraft = true; }
+  d.chkAfter = S.checking; d.savAfter = S.savings;
+  S.decisions.push(d);
+}
+
+/* The three decisions a teacher would discuss: each choice carries a weight, and context raises it. */
+function ranked(l) {
+  var u = UI[l], h = HH[S.hh];
+  var sur = S.decisions.filter(function (d) { return h.cards[d.step].kind === 'surprise'; })[0];
+  var anyOver = S.decisions.some(function (d) { return d.overdraft; });
+  var prepaid = S.decisions.some(function (d) { return choiceAt(d).tag === 'prepaid'; });
+  return S.decisions.map(function (d) {
+    var ch = choiceAt(d), w = ch.w, extra = [];
+    if (ch.tag === 'nosave' && sur && choiceAt(sur).amt > 0 && sur.fromChk > 0) w += 2;
+    if (ch.tag === 'bigsave' && anyOver) w += 2;
+    if (ch.tag === 'bigwant' && d.savBefore === 0) w += 2;
+    if (ch.tag === 'cutnet' && prepaid) { w += 1; extra.push(u.prepaidToo); }
+    if (d.overdraft) { w += 3; extra.push(u.overNote); }
+    if (words(d.reason) < 5) { w += 1; extra.push(u.shortNote); }
+    return { d: d, ch: ch, card: cardAt(d), w: w, extra: extra };
+  }).sort(function (a, b) { return b.w - a.w || a.d.step - b.d.step; });
+}
+
+function vStart() {
+  var u = UI[S.lang], l = S.lang;
+  return '<h1 id="h" tabindex="-1">' + u.startH + '</h1>' +
+    '<p>' + u.startLead + '</p>' +
+    '<fieldset><legend>' + u.startQ + '</legend><div class="choices">' +
+    HH.map(function (h, i) {
+      var on = S.pick === i;
+      return '<label class="choice hh' + (on ? ' on' : '') + '"><input type="radio" name="hh" value="' + i + '"' + (on ? ' checked' : '') + '>' +
+        '<span class="txt"><span class="nm">' + h.name + '</span><span class="job">' + h.job[l] + '</span><span class="pay">' + u.takeHome(h.pay) + '</span><span class="sit">' + h.sit[l] + '</span></span></label>';
+    }).join('') +
+    '</div></fieldset>' +
+    '<p class="hint" id="hint" aria-live="polite">' + esc(S.hint) + '</p>' +
+    '<button class="btn" type="button" data-act="start">' + u.startBtn + '</button>';
+}
+
+function vCard() {
+  var u = UI[S.lang], l = S.lang, h = HH[S.hh], c = h.cards[S.step];
+  var last = S.decisions[S.decisions.length - 1];
+  var lastCard = S.step === h.cards.length - 1;
+  return '<p class="result" role="status">' + esc(last ? resultText(last, l) : u.begins) + '</p>' +
+    '<h2 id="h" tabindex="-1">' + c.title[l] + '</h2>' +
+    '<p>' + c.body[l] + '</p>' +
+    '<fieldset><legend>' + c.q[l] + '</legend><div class="choices">' +
+    c.choices.map(function (ch, i) {
+      var on = S.sel === i;
+      return '<label class="choice' + (on ? ' on' : '') + '"><input type="radio" name="ch" value="' + i + '"' + (on ? ' checked' : '') + '>' +
+        '<span class="txt">' + ch.label[l] + '</span>' + (c.kind === 'payday' ? '' : '<span class="amt">' + f(ch.amt) + '</span>') + '</label>';
+    }).join('') +
+    '</div></fieldset>' +
+    '<div class="reason" id="reason"' + (S.sel === null ? ' hidden' : '') + '>' +
+    '<label for="why">' + c.prompt[l] + '</label>' +
+    '<p class="help" id="whyhelp">' + u.one + '</p>' +
+    '<textarea id="why" rows="3" aria-describedby="whyhelp hint" placeholder="' + esc(u.ph) + '">' + esc(S.draft) + '</textarea>' +
+    '<p class="hint" id="hint" aria-live="polite">' + esc(S.hint) + '</p>' +
+    '<button class="btn" type="button" data-act="next">' + (lastCard ? u.seeMonth : u.cont) + '</button>' +
+    '</div>';
+}
+
+function lateItems(l) {
+  var u = UI[l], out = [];
+  S.decisions.forEach(function (d) {
+    var ch = choiceAt(d);
+    if (ch.late) out.push(ch.late[l]);
+    if (ch.putoff) out.push(ch.putoff[l]);
+    if (ch.owedText) out.push(ch.owedText[l]);
+    if (d.overdraft) out.push(u.overItem(cardAt(d).item[l]));
+  });
+  return out;
+}
+
+function ledger(l) {
+  var u = UI[l], h = HH[S.hh], rows = [];
+  rows.push([u.left, h.start]);
+  rows.push([u.payL, h.pay]);
+  h.auto.forEach(function (x) { rows.push([x.t[l], -x.a]); });
+  S.decisions.forEach(function (d) {
+    var c = cardAt(d);
+    if (c.kind === 'payday') { rows.push([u.moved, -d.fromChk]); }
+    else { rows.push([c.item[l], -d.fromChk, d.fromSav > 0 ? u.plusSav(d.fromSav) : '']); }
+    if (d.overdraft) rows.push([u.overFee, -OVERDRAFT]);
+  });
+  return '<table class="sheet"><tbody>' +
+    rows.map(function (r) {
+      return '<tr><td>' + esc(r[0]) + (r[2] ? '<span class="sub">' + esc(r[2]) + '</span>' : '') + '</td><td class="n">' + (r[1] > 0 ? '+' : '') + f(r[1]) + '</td></tr>';
+    }).join('') +
+    '<tr class="total"><td>' + u.endChk + '</td><td class="n' + (S.checking < 0 ? ' neg' : '') + '">' + f(S.checking) + '</td></tr>' +
+    '<tr class="total"><td>' + u.endSav + '</td><td class="n">' + f(S.savings) + '</td></tr>' +
+    '</tbody></table>';
+}
+
+function vEnd() {
+  var u = UI[S.lang], l = S.lang, h = HH[S.hh];
+  var last = S.decisions[S.decisions.length - 1];
+  var late = lateItems(l);
+  return '<p class="result" role="status">' + esc(resultText(last, l)) + '</p>' +
+    '<h1 id="h" tabindex="-1">' + u.endH + '</h1>' +
+    '<table class="sheet"><tbody>' +
+    '<tr><td>' + u.checking + '</td><td class="n' + (S.checking < 0 ? ' neg' : '') + '">' + f(S.checking) + '</td></tr>' +
+    '<tr><td>' + u.savings + '</td><td class="n">' + f(S.savings) + '</td></tr>' +
+    (S.owed > 0 ? '<tr><td>' + u.stillOwed + '</td><td class="n">' + f(S.owed) + '</td></tr>' : '') +
+    '</tbody></table>' +
+    '<h3>' + u.lateH + '</h3>' +
+    (late.length ? '<ul class="list">' + late.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>' : '<p>' + u.lateNone + '</p>') +
+    '<h3>' + u.reasonsH + '</h3>' +
+    '<ul class="list">' + S.decisions.map(function (d) {
+      var c = cardAt(d), ch = choiceAt(d);
+      return '<li><p class="k">' + esc(c.title[l]) + '</p><p class="label">' + esc(ch.label[l]) + '</p><p class="said">“' + esc(d.reason) + '”</p></li>';
+    }).join('') + '</ul>' +
+    '<details><summary>' + u.ledgerH + '</summary>' + ledger(l) + '</details>' +
+    '<p class="note">' + u.next + '</p>' +
+    '<div class="btnrow"><button class="btn ghost" type="button" data-act="teach">' + u.teach + '</button><button class="btn" type="button" data-act="again">' + u.again + '</button></div>';
+}
+
+function vTeacher() {
+  var u = UI[S.lang], l = S.lang;
+  if (S.hh === null || !S.decisions.length) {
+    return '<h1 id="h" tabindex="-1">' + u.tH + '</h1><p>' + u.tEmpty + '</p><p class="note">' + u.tNote + '</p>' +
+      '<button class="btn ghost" type="button" data-act="teach">' + u.back + '</button>';
+  }
+  var h = HH[S.hh], done = S.screen === 'end', top = ranked(l).slice(0, 3);
+  return '<h1 id="h" tabindex="-1">' + u.tH + '</h1>' +
+    '<p>' + esc(u.tLead(h.name)) + '</p>' +
+    (done ? '' : '<p class="k">' + u.tSoFar(S.decisions.length, h.cards.length) + '</p>') +
+    '<h3>' + (done && top.length === 3 ? u.tTop3 : u.tTopFew) + '</h3>' +
+    '<ol class="list flags">' + top.map(function (x) {
+      return '<li><p class="k">' + esc(u.tStep(x.d.step + 1, x.card.title[l])) + '</p>' +
+        '<p><span class="label">' + u.tChose + ':</span> ' + esc(choseText(x.d, l)) + '</p>' +
+        '<p><span class="label">' + u.tReason + ':</span> <span class="said">“' + esc(x.d.reason) + '”</span></p>' +
+        '<p><span class="label">' + u.tWhy + ':</span> ' + esc([x.ch.note[l]].concat(x.extra).join(' ')) + '</p></li>';
+    }).join('') + '</ol>' +
+    '<h3>' + u.tAll + '</h3>' +
+    '<ul class="list">' + S.decisions.map(function (d) {
+      var c = cardAt(d), ch = choiceAt(d);
+      return '<li><p class="k">' + esc(u.tStep(d.step + 1, c.title[l])) + '</p><p class="label">' + esc(choseText(d, l)) + '</p><p class="said">“' + esc(d.reason) + '”</p></li>';
+    }).join('') + '</ul>' +
+    '<p class="note">' + u.tNote + '</p>' +
+    '<button class="btn ghost" type="button" data-act="teach">' + u.back + '</button>';
+}
+
+function vProgress() {
+  if (S.teacher || S.screen !== 'card') return '';
+  var u = UI[S.lang], t = HH[S.hh].cards.length;
+  return '<div class="progress"><span>' + u.step(S.step + 1, t) + '</span><span class="bal"><span>' + u.checking + ' <b class="' + (S.checking < 0 ? 'neg' : '') + '">' + f(S.checking) + '</b></span><span>' + u.savings + ' <b>' + f(S.savings) + '</b></span></span></div>' +
+    '<div class="track" aria-hidden="true"><i style="width:' + ((S.step + 1) / t * 100).toFixed(2) + '%"></i></div>';
+}
+
+function render() {
+  var u = UI[S.lang];
+  document.documentElement.lang = S.lang;
+  $('proto').textContent = u.proto;
+  var lb = $('langBtn');
+  lb.textContent = u.lang;
+  lb.setAttribute('lang', S.lang === 'en' ? 'es' : 'en');
+  lb.setAttribute('aria-label', u.langAria);
+  var tb = $('teachBtn');
+  tb.textContent = S.teacher ? u.back : u.teach;
+  tb.setAttribute('aria-pressed', S.teacher ? 'true' : 'false');
+  $('progress').innerHTML = vProgress();
+  main.innerHTML = S.teacher ? vTeacher() : (S.screen === 'start' ? vStart() : S.screen === 'card' ? vCard() : vEnd());
+  $('foot').innerHTML = '<p>' + u.privacy + '</p><p>' + u.access + '</p><p>' + u.spanish + '</p>';
+  grow();
+}
+
+function grow() {
+  var ta = $('why');
+  if (!ta) return;
+  ta.style.height = 'auto';
+  ta.style.height = Math.max(96, ta.scrollHeight + 2) + 'px';
+}
+
+function toTop() {
+  window.scrollTo(0, 0);
+  var h = $('h');
+  if (h) h.focus({ preventScroll: true });
+}
+
+function markOn(input) {
+  var all = main.querySelectorAll('input[name="' + input.name + '"]');
+  for (var i = 0; i < all.length; i++) all[i].closest('.choice').classList.toggle('on', all[i].checked);
+  S.hint = '';
+  var hint = $('hint');
+  if (hint) hint.textContent = '';
+}
+
+var act = {
+  start: function () {
+    if (S.pick === null) { S.hint = UI[S.lang].pickFirst; $('hint').textContent = S.hint; return; }
+    var h = HH[S.pick];
+    S.hh = S.pick; S.screen = 'card'; S.step = 0; S.sel = null; S.draft = ''; S.hint = '';
+    S.checking = h.start + h.pay - h.autoTotal; S.savings = 0; S.owed = 0; S.decisions = [];
+    render(); toTop();
+  },
+  next: function () {
+    var ta = $('why');
+    S.draft = ta.value;
+    if (words(S.draft) < 3) { S.hint = UI[S.lang].short; $('hint').textContent = S.hint; ta.focus(); return; }
+    apply(S.sel, S.draft);
+    S.step += 1; S.sel = null; S.draft = ''; S.hint = '';
+    if (S.step >= HH[S.hh].cards.length) S.screen = 'end';
+    render(); toTop();
+  },
+  teach: function () { S.teacher = !S.teacher; render(); toTop(); },
+  again: function () { S = fresh(S.lang); render(); toTop(); }
+};
+
+main.addEventListener('change', function (e) {
+  var t = e.target;
+  if (t.name === 'hh') { S.pick = +t.value; markOn(t); }
+  if (t.name === 'ch') {
+    S.sel = +t.value; markOn(t);
+    var r = $('reason');
+    if (r.hidden) { r.hidden = false; grow(); r.scrollIntoView({ block: 'nearest' }); }
+  }
+});
+main.addEventListener('input', function (e) {
+  if (e.target.id === 'why') {
+    S.draft = e.target.value;
+    grow();
+    if (S.hint && words(S.draft) >= 3) { S.hint = ''; $('hint').textContent = ''; }
+  }
+});
+main.addEventListener('keydown', function (e) {
+  if (e.target.id === 'why' && e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); act.next(); }
+});
+main.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-act]');
+  if (b && act[b.dataset.act]) act[b.dataset.act]();
+});
+$('langBtn').addEventListener('click', function () { S.lang = S.lang === 'en' ? 'es' : 'en'; S.hint = ''; render(); });
+$('teachBtn').addEventListener('click', function () { act.teach(); });
+
+render();
+})();
+</script>
+</body>
+</html>
